@@ -1,0 +1,16 @@
+{
+  "name": "claude-nebula",
+  "version": "1.0.0",
+  "description": "Persistent semantic memory for Claude Code powered by Nebula AI",
+  "private": true,
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nebula-ai/claude-nebula"
+  },
+  "keywords": ["claude-code", "plugin", "nebula", "memory", "ai", "semantic-search"],
+  "author": "Nebula",
+  "license": "MIT"
+}

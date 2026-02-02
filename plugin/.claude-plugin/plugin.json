@@ -1,0 +1,9 @@
+{
+  "name": "claude-nebula",
+  "version": "1.0.0",
+  "description": "Persistent semantic memory across Claude Code sessions powered by Nebula AI",
+  "author": {
+    "name": "Nebula",
+    "email": "support@trynebula.ai"
+  }
+}
