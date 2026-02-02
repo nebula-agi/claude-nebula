@@ -1,8 +1,8 @@
 {
   "name": "nebula-plugins",
   "owner": {
-    "name": "Nebula AI",
-    "email": "support@trynebula.ai"
+    "name": "Nebula",
+    "email": "hit@trynebula.ai"
   },
   "plugins": [
     {
@@ -11,7 +11,7 @@
       "description": "Persistent semantic memory across Claude Code sessions powered by Nebula AI",
       "version": "1.0.0",
       "author": {
-        "name": "Nebula AI"
+        "name": "Nebula"
       }
     }
   ]

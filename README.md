@@ -84,9 +84,8 @@ Log out from Nebula and clear saved credentials.
 NEBULA_API_KEY=your_key_here
 
 # Optional
-NEBULA_API_URL=https://api.trynebula.ai/v1  # Custom API endpoint
-NEBULA_SKIP_TOOLS=Read,Glob,Grep             # Tools to not capture
-NEBULA_DEBUG=true                             # Enable debug logging
+NEBULA_SKIP_TOOLS=Read,Glob,Grep  # Tools to not capture
+NEBULA_DEBUG=true                  # Enable debug logging
 ```
 
 ### Settings File
