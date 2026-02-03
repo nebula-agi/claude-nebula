@@ -43,19 +43,11 @@ async function getOrCreateCollection(client, containerTag, projectName) {
   } catch (err) {
     // If already exists, fetch it by name to get the actual UUID
     if (err.message?.includes('409') || err.message?.includes('exists')) {
-      try {
-        const collection = await client.getCollectionByName(name);
-        const collectionId = collection.id;
-        cache[containerTag] = collectionId;
-        saveCollectionCache(cache);
-        return collectionId;
-      } catch (getErr) {
-        // Fallback: return the name if we can't fetch it
-        // This maintains backwards compatibility with cache entries
-        cache[containerTag] = name;
-        saveCollectionCache(cache);
-        return name;
-      }
+      const collection = await client.getCollectionByName(name);
+      const collectionId = collection.id;
+      cache[containerTag] = collectionId;
+      saveCollectionCache(cache);
+      return collectionId;
     }
     throw err;
   }
