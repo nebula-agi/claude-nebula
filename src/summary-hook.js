@@ -1,9 +1,8 @@
-const { NebulaClient } = require('./lib/nebula-client');
-const { CollectionManager } = require('./lib/collection-manager');
+const { createClient, getOrCreateCollection } = require('./lib/nebula');
 const { getContainerTag, getProjectName } = require('./lib/container-tag');
 const { loadSettings, getApiKey, debugLog } = require('./lib/settings');
 const { readStdin, writeOutput } = require('./lib/stdin');
-const { formatNewEntries } = require('./lib/transcript-formatter');
+const { extractNewMessages } = require('./lib/transcript-formatter');
 
 async function main() {
   const settings = loadSettings();
@@ -11,13 +10,11 @@ async function main() {
   try {
     const input = await readStdin();
     const cwd = input.cwd || process.cwd();
-    const sessionId = input.session_id;
-    const transcriptPath = input.transcript_path;
+    const { session_id: sessionId, transcript_path: transcriptPath } = input;
 
     debugLog(settings, 'Stop', { sessionId, transcriptPath });
 
     if (!transcriptPath || !sessionId) {
-      debugLog(settings, 'Missing transcript path or session id');
       writeOutput({ continue: true });
       return;
     }
@@ -30,39 +27,37 @@ async function main() {
       return;
     }
 
-    const formatted = formatNewEntries(transcriptPath, sessionId);
-
-    if (!formatted) {
+    const extracted = extractNewMessages(transcriptPath, sessionId);
+    if (!extracted) {
       debugLog(settings, 'No new content to save');
       writeOutput({ continue: true });
       return;
     }
 
-    const client = new NebulaClient(apiKey);
-    const collectionManager = new CollectionManager(client);
+    const client = createClient(apiKey);
     const containerTag = getContainerTag(cwd);
     const projectName = getProjectName(cwd);
+    const collectionId = await getOrCreateCollection(
+      client,
+      containerTag,
+      projectName,
+    ).catch(() => containerTag);
 
-    // Get or create collection
-    const collection = await collectionManager
-      .getOrCreateCollection(containerTag, projectName)
-      .catch(() => null);
+    // Store conversation using Nebula's conversation format
+    // The role field triggers conversation mode in the SDK
+    await client.storeMemory({
+      memory_id: sessionId,
+      collection_id: collectionId,
+      content: extracted.messages.map((m) => ({
+        role: m.role,
+        content: m.content,
+      })),
+      metadata: { project: projectName },
+    });
 
-    const collectionId = collection?.id || containerTag;
-
-    await client.addMemory(
-      formatted,
-      collectionId,
-      {
-        memory_type: 'conversation',
-        type: 'session_turn',
-        project: projectName,
-        timestamp: new Date().toISOString(),
-      },
-      sessionId,
-    );
-
-    debugLog(settings, 'Session turn saved', { length: formatted.length });
+    debugLog(settings, 'Conversation saved', {
+      count: extracted.messages.length,
+    });
     writeOutput({ continue: true });
   } catch (err) {
     debugLog(settings, 'Error', { error: err.message });

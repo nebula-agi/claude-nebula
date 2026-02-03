@@ -1,15 +1,12 @@
-const { NebulaClient } = require('./lib/nebula-client');
-const { CollectionManager } = require('./lib/collection-manager');
+const { createClient, getOrCreateCollection } = require('./lib/nebula');
 const { getContainerTag, getProjectName } = require('./lib/container-tag');
 const { loadSettings, getApiKey } = require('./lib/settings');
 
 async function main() {
   const query = process.argv.slice(2).join(' ');
 
-  if (!query || !query.trim()) {
-    console.log(
-      'No search query provided. Please specify what you want to search for.',
-    );
+  if (!query?.trim()) {
+    console.log('Usage: node search-memory.cjs "search query"');
     return;
   }
 
@@ -20,9 +17,7 @@ async function main() {
     apiKey = getApiKey(settings);
   } catch {
     console.log('Nebula API key not configured.');
-    console.log(
-      'Set NEBULA_API_KEY environment variable to enable memory search.',
-    );
+    console.log('Set NEBULA_API_KEY environment variable.');
     console.log('Get your key at: https://trynebula.ai/settings/api-keys');
     return;
   }
@@ -32,62 +27,38 @@ async function main() {
   const projectName = getProjectName(cwd);
 
   try {
-    const client = new NebulaClient(apiKey);
-    const collectionManager = new CollectionManager(client);
+    const client = createClient(apiKey);
+    const collectionId = await getOrCreateCollection(
+      client,
+      containerTag,
+      projectName,
+    ).catch(() => containerTag);
 
-    // Get or create collection
-    const collection = await collectionManager
-      .getOrCreateCollection(containerTag, projectName)
-      .catch(() => null);
-
-    const collectionId = collection?.id || containerTag;
-    const result = await client.getProfile(collectionId, query);
+    const result = await client.search({
+      query,
+      collection_ids: [collectionId],
+    });
 
     console.log(`## Memory Search: "${query}"`);
     console.log(`Project: ${projectName}\n`);
 
-    if (result.profile) {
-      if (result.profile.static?.length > 0) {
-        console.log('### User Preferences');
-        result.profile.static.forEach((fact) => console.log(`- ${fact}`));
-        console.log('');
-      }
-      if (result.profile.dynamic?.length > 0) {
-        console.log('### Recent Context');
-        result.profile.dynamic.forEach((fact) => console.log(`- ${fact}`));
-        console.log('');
-      }
+    const utterances = result.utterances || [];
+    if (utterances.length === 0) {
+      console.log('No memories found matching your query.');
+      console.log('Memories are automatically saved as you work.');
+      return;
     }
 
-    if (result.searchResults?.results?.length > 0) {
-      console.log('### Relevant Memories');
-      result.searchResults.results.forEach((mem, i) => {
-        const similarity = Math.round(mem.similarity * 100);
-        const content = mem.memory || mem.content || '';
-        console.log(`\n**Memory ${i + 1}** (${similarity}% match)`);
-        if (mem.title) console.log(`*${mem.title}*`);
-        console.log(content.slice(0, 500));
-      });
-    } else {
-      const searchResult = await client.search(query, collectionId, {
-        limit: 10,
-      });
-      if (searchResult.results?.length > 0) {
-        console.log('### Relevant Memories');
-        searchResult.results.forEach((mem, i) => {
-          const similarity = Math.round(mem.similarity * 100);
-          const content = mem.memory || mem.content || '';
-          console.log(`\n**Memory ${i + 1}** (${similarity}% match)`);
-          if (mem.title) console.log(`*${mem.title}*`);
-          console.log(content.slice(0, 500));
-        });
-      } else {
-        console.log('No memories found matching your query.');
-        console.log(
-          'Memories are automatically saved as you work in this project.',
-        );
-      }
-    }
+    console.log('### Relevant Memories\n');
+    utterances.forEach((u, i) => {
+      const score = Math.round((u.activation_score || 0) * 100);
+      const text = u.text || '';
+      const role = u.source_role ? `[${u.source_role}] ` : '';
+      console.log(`**${i + 1}.** (${score}% match)`);
+      console.log(
+        `${role}${text.slice(0, 500)}${text.length > 500 ? '...' : ''}\n`,
+      );
+    });
   } catch (err) {
     console.log(`Error searching memories: ${err.message}`);
   }

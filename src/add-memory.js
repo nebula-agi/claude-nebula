@@ -1,15 +1,12 @@
-const { NebulaClient } = require('./lib/nebula-client');
-const { CollectionManager } = require('./lib/collection-manager');
+const { createClient, getOrCreateCollection } = require('./lib/nebula');
 const { getContainerTag, getProjectName } = require('./lib/container-tag');
 const { loadSettings, getApiKey } = require('./lib/settings');
 
 async function main() {
   const content = process.argv.slice(2).join(' ');
 
-  if (!content || !content.trim()) {
-    console.log(
-      'No content provided. Usage: node add-memory.cjs "content to save"',
-    );
+  if (!content?.trim()) {
+    console.log('Usage: node add-memory.cjs "content to save"');
     return;
   }
 
@@ -29,25 +26,21 @@ async function main() {
   const projectName = getProjectName(cwd);
 
   try {
-    const client = new NebulaClient(apiKey);
-    const collectionManager = new CollectionManager(client);
+    const client = createClient(apiKey);
+    const collectionId = await getOrCreateCollection(
+      client,
+      containerTag,
+      projectName,
+    ).catch(() => containerTag);
 
-    // Get or create collection
-    const collection = await collectionManager
-      .getOrCreateCollection(containerTag, projectName)
-      .catch(() => null);
-
-    const collectionId = collection?.id || containerTag;
-
-    const result = await client.addMemory(content, collectionId, {
-      memory_type: 'conversation',
-      type: 'manual',
-      project: projectName,
-      timestamp: new Date().toISOString(),
+    const result = await client.storeMemory({
+      collection_id: collectionId,
+      content,
+      metadata: { project: projectName, type: 'manual' },
     });
 
     console.log(`Memory saved to project: ${projectName}`);
-    console.log(`ID: ${result.id}`);
+    console.log(`ID: ${result}`);
   } catch (err) {
     console.log(`Error saving memory: ${err.message}`);
   }

@@ -30,11 +30,10 @@ function loadSettings() {
   } catch (err) {
     console.error(`Settings: Failed to load ${SETTINGS_FILE}: ${err.message}`);
   }
-  if (process.env.NEBULA_API_KEY)
-    settings.apiKey = process.env.NEBULA_API_KEY;
+  if (process.env.NEBULA_API_KEY) settings.apiKey = process.env.NEBULA_API_KEY;
   if (process.env.NEBULA_SKIP_TOOLS)
-    settings.skipTools = process.env.NEBULA_SKIP_TOOLS.split(',').map(
-      (s) => s.trim(),
+    settings.skipTools = process.env.NEBULA_SKIP_TOOLS.split(',').map((s) =>
+      s.trim(),
     );
   if (process.env.NEBULA_DEBUG === 'true') settings.debug = true;
   return settings;
@@ -49,8 +48,7 @@ function saveSettings(settings) {
 
 function getApiKey(settings) {
   if (settings.apiKey) return settings.apiKey;
-  if (process.env.NEBULA_API_KEY)
-    return process.env.NEBULA_API_KEY;
+  if (process.env.NEBULA_API_KEY) return process.env.NEBULA_API_KEY;
 
   const credentials = loadCredentials();
   if (credentials?.apiKey) return credentials.apiKey;

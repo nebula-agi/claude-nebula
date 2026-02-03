@@ -1,9 +1,11 @@
-const { NebulaClient } = require('./lib/nebula-client');
-const { CollectionManager } = require('./lib/collection-manager');
+const {
+  createClient,
+  getOrCreateCollection,
+  formatSearchContext,
+} = require('./lib/nebula');
 const { getContainerTag, getProjectName } = require('./lib/container-tag');
 const { loadSettings, getApiKey, debugLog } = require('./lib/settings');
 const { readStdin, writeOutput } = require('./lib/stdin');
-const { formatContext } = require('./lib/format-context');
 
 async function main() {
   const settings = loadSettings();
@@ -23,72 +25,53 @@ async function main() {
       writeOutput({
         hookSpecificOutput: {
           hookEventName: 'SessionStart',
-          additionalContext: `<nebula-status>
-No API key found. Please set NEBULA_API_KEY environment variable.
-Get your API key from: https://trynebula.ai/settings/api-keys
-</nebula-status>`,
-        },
-      });
-      return;
-    }
-
-    const client = new NebulaClient(apiKey);
-    const collectionManager = new CollectionManager(client);
-
-    // Get or create collection for this project
-    const collection = await collectionManager
-      .getOrCreateCollection(containerTag, projectName)
-      .catch((err) => {
-        debugLog(settings, 'Collection creation failed', { error: err.message });
-        return null;
-      });
-
-    if (!collection) {
-      debugLog(settings, 'Using default collection');
-    }
-
-    const collectionId = collection?.id || containerTag;
-    const profileResult = await client
-      .getProfile(collectionId, projectName)
-      .catch(() => null);
-
-    const additionalContext = formatContext(
-      profileResult,
-      true,
-      false,
-      settings.maxProfileItems,
-    );
-
-    if (!additionalContext) {
-      writeOutput({
-        hookSpecificOutput: {
-          hookEventName: 'SessionStart',
           additionalContext: `<nebula-context>
-No previous memories found for this project.
-Memories will be saved as you work.
+No API key found. Set NEBULA_API_KEY environment variable.
+Get your key at: https://trynebula.ai/settings/api-keys
 </nebula-context>`,
         },
       });
       return;
     }
 
-    debugLog(settings, 'Context generated', {
-      length: additionalContext.length,
-    });
+    const client = createClient(apiKey);
+    const collectionId = await getOrCreateCollection(
+      client,
+      containerTag,
+      projectName,
+    ).catch(() => containerTag);
 
-    writeOutput({
-      hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext },
-    });
-  } catch (err) {
-    debugLog(settings, 'Error', { error: err.message });
-    console.error(`Nebula: ${err.message}`);
+    // Search for relevant context
+    const searchResult = await client
+      .search({
+        query: `${projectName} recent work context`,
+        collection_ids: [collectionId],
+      })
+      .catch(() => null);
+
+    const context = searchResult
+      ? formatSearchContext(searchResult, settings.maxProfileItems)
+      : null;
+
     writeOutput({
       hookSpecificOutput: {
         hookEventName: 'SessionStart',
-        additionalContext: `<nebula-status>
+        additionalContext:
+          context ||
+          `<nebula-context>
+No previous memories found for this project.
+Memories will be saved as you work.
+</nebula-context>`,
+      },
+    });
+  } catch (err) {
+    debugLog(settings, 'Error', { error: err.message });
+    writeOutput({
+      hookSpecificOutput: {
+        hookEventName: 'SessionStart',
+        additionalContext: `<nebula-context>
 Failed to load memories: ${err.message}
-Session will continue without memory context.
-</nebula-status>`,
+</nebula-context>`,
       },
     });
   }
