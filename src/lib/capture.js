@@ -1,7 +1,11 @@
 const { createClient, getOrCreateCollection } = require('./nebula');
 const { getContainerTag, getProjectName } = require('./container-tag');
 const { loadSettings, getApiKey, debugLog } = require('./settings');
-const { extractNewMessages } = require('./transcript-formatter');
+const {
+  extractNewMessages,
+  getNebulaMemoryId,
+  setNebulaMemoryId,
+} = require('./transcript-formatter');
 
 /**
  * Capture and store new messages from the transcript to Nebula.
@@ -45,17 +49,36 @@ async function captureNewMessages(transcriptPath, sessionId, cwd, hookName) {
       projectName,
     ).catch(() => containerTag);
 
-    // Store conversation using Nebula's conversation format
-    // The role field triggers conversation mode in the SDK
-    await client.storeMemory({
-      memory_id: sessionId,
-      collection_id: collectionId,
-      content: extracted.messages.map((m) => ({
-        role: m.role,
-        content: m.content,
-      })),
-      metadata: { project: projectName },
-    });
+    const messages = extracted.messages.map((m) => ({
+      role: m.role,
+      content: m.content,
+    }));
+
+    // Get or create memory_id for this session's conversation
+    let nebulaMemoryId = getNebulaMemoryId(sessionId);
+
+    // Store each message individually so Nebula can chunk them properly
+    for (const msg of messages) {
+      if (nebulaMemoryId) {
+        // Append to existing conversation
+        await client.storeMemory({
+          memory_id: nebulaMemoryId,
+          collection_id: collectionId,
+          content: msg.content,
+          role: msg.role,
+          metadata: { project: projectName },
+        });
+      } else {
+        // Create new conversation with first message
+        nebulaMemoryId = await client.storeMemory({
+          collection_id: collectionId,
+          content: msg.content,
+          role: msg.role,
+          metadata: { project: projectName },
+        });
+        setNebulaMemoryId(sessionId, nebulaMemoryId);
+      }
+    }
 
     debugLog(settings, `${hookName}: Conversation saved`, {
       count: extracted.messages.length,
