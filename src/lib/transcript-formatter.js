@@ -3,11 +3,54 @@ const path = require('node:path');
 const os = require('node:os');
 
 const TRACKER_DIR = path.join(os.homedir(), '.nebula-claude', 'trackers');
+const MEMORY_IDS_FILE = path.join(os.homedir(), '.nebula-claude', 'memory-ids.json');
 
 function ensureTrackerDir() {
   if (!fs.existsSync(TRACKER_DIR)) {
     fs.mkdirSync(TRACKER_DIR, { recursive: true });
   }
+}
+
+/**
+ * Load the session → Nebula memory ID mapping.
+ */
+function loadMemoryIds() {
+  try {
+    if (fs.existsSync(MEMORY_IDS_FILE)) {
+      return JSON.parse(fs.readFileSync(MEMORY_IDS_FILE, 'utf-8'));
+    }
+  } catch {
+    // Ignore parse errors
+  }
+  return {};
+}
+
+/**
+ * Save the session → Nebula memory ID mapping.
+ */
+function saveMemoryIds(mapping) {
+  const dir = path.dirname(MEMORY_IDS_FILE);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+  fs.writeFileSync(MEMORY_IDS_FILE, JSON.stringify(mapping, null, 2));
+}
+
+/**
+ * Get the Nebula memory ID for a session (if it exists).
+ */
+function getNebulaMemoryId(sessionId) {
+  const mapping = loadMemoryIds();
+  return mapping[sessionId] || null;
+}
+
+/**
+ * Store the Nebula memory ID for a session.
+ */
+function setNebulaMemoryId(sessionId, memoryId) {
+  const mapping = loadMemoryIds();
+  mapping[sessionId] = memoryId;
+  saveMemoryIds(mapping);
 }
 
 function getLastCapturedUuid(sessionId) {
@@ -123,4 +166,6 @@ module.exports = {
   cleanContent,
   getLastCapturedUuid,
   setLastCapturedUuid,
+  getNebulaMemoryId,
+  setNebulaMemoryId,
 };
