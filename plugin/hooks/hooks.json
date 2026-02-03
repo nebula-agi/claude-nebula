@@ -18,7 +18,7 @@
           {
             "type": "command",
             "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/prompt-hook.cjs",
-            "timeout": 15
+            "timeout": 25
           }
         ]
       }
@@ -30,7 +30,7 @@
           {
             "type": "command",
             "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/observation-hook.cjs",
-            "timeout": 15
+            "timeout": 25
           }
         ]
       }
