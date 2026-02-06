@@ -3,9 +3,9 @@ const esbuild = require('esbuild');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const ROOT = path.join(__dirname, '..');
-const SRC = path.join(ROOT, 'src');
-const OUT = path.join(ROOT, 'plugin', 'scripts');
+const PLUGIN = path.join(__dirname, '..');
+const SRC = path.join(PLUGIN, 'src');
+const OUT = path.join(PLUGIN, 'scripts');
 
 const hooks = ['capture-hook', 'search-memory', 'add-memory'];
 

@@ -1,7 +1,6 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
-const { loadCredentials } = require('./auth');
 
 const SETTINGS_FILE = path.join(
   os.homedir(),
@@ -20,18 +19,14 @@ function loadSettings() {
     console.error(`Settings: Failed to load ${SETTINGS_FILE}: ${err.message}`);
   }
   if (process.env.NEBULA_API_KEY) settings.apiKey = process.env.NEBULA_API_KEY;
+  if (process.env.NEBULA_COLLECTION_ID) settings.collectionId = process.env.NEBULA_COLLECTION_ID;
   if (process.env.NEBULA_DEBUG === 'true') settings.debug = true;
   return settings;
 }
 
 function getApiKey(settings) {
   if (settings.apiKey) return settings.apiKey;
-  if (process.env.NEBULA_API_KEY) return process.env.NEBULA_API_KEY;
-
-  const credentials = loadCredentials();
-  if (credentials?.apiKey) return credentials.apiKey;
-
-  throw new Error('NO_API_KEY');
+  throw new Error('apiKey is required in ~/.nebula-claude/settings.json or NEBULA_API_KEY env var');
 }
 
 function debugLog(settings, message, data) {

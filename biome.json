@@ -7,7 +7,7 @@
   },
   "files": {
     "ignoreUnknown": true,
-    "includes": ["src/**", "scripts/**"]
+    "includes": ["plugin/src/**", "plugin/scripts/build.js"]
   },
   "formatter": {
     "enabled": true,
