@@ -19,6 +19,6 @@ Remove saved Nebula credentials to allow re-authentication.
    Successfully logged out from Nebula.
 
    Your credentials have been removed. To re-authenticate, set the
-   NEBULA_API_KEY environment variable or save credentials in
+   CC_NEBULA_API_KEY environment variable or save credentials in
    ~/.nebula-claude/credentials.json
    ```

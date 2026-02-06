@@ -7,7 +7,7 @@ async function getProjectClient() {
   const collectionId = settings.collectionId;
 
   if (!collectionId) {
-    throw new Error('collectionId is required in ~/.nebula-claude/settings.json or NEBULA_COLLECTION_ID env var');
+    throw new Error('collectionId is required in ~/.nebula-claude/settings.json or CC_NEBULA_COLLECTION_ID env var');
   }
 
   return {

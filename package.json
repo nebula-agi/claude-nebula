@@ -1,6 +1,6 @@
 {
   "name": "claude-nebula-dev",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Build tools for claude-nebula plugin - Semantic memory powered by Nebula AI",
   "private": true,
   "type": "commonjs",

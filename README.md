@@ -56,8 +56,8 @@ EOF
 Alternatively, use environment variables (these override the settings file):
 
 ```bash
-export NEBULA_API_KEY="your-nebula-api-key"
-export NEBULA_COLLECTION_ID="your-collection-id"
+export CC_NEBULA_API_KEY="your-nebula-api-key"
+export CC_NEBULA_COLLECTION_ID="your-collection-id"
 ```
 
 ### 4. Install the Plugin
@@ -83,11 +83,11 @@ Start a new Claude Code session. The capture hooks will run automatically in the
 ## Configuration Reference
 
 
-| Setting       | settings.json key | Environment variable   | Required |
-| ------------- | ----------------- | ---------------------- | -------- |
-| API Key       | `apiKey`          | `NEBULA_API_KEY`       | Yes      |
-| Collection ID | `collectionId`    | `NEBULA_COLLECTION_ID` | Yes      |
-| Debug logging | `debug`           | `NEBULA_DEBUG=true`    | No       |
+| Setting       | settings.json key | Environment variable      | Required |
+| ------------- | ----------------- | ------------------------- | -------- |
+| API Key       | `apiKey`          | `CC_NEBULA_API_KEY`       | Yes      |
+| Collection ID | `collectionId`    | `CC_NEBULA_COLLECTION_ID` | Yes      |
+| Debug logging | `debug`           | `CC_NEBULA_DEBUG=true`    | No       |
 
 
 Settings file location: `~/.nebula-claude/settings.json`

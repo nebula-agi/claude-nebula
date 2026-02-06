@@ -1,6 +1,6 @@
 {
   "name": "claude-nebula",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Persistent semantic memory for Claude Code powered by Nebula AI",
   "private": true,
   "engines": {

@@ -18,15 +18,15 @@ function loadSettings() {
   } catch (err) {
     console.error(`Settings: Failed to load ${SETTINGS_FILE}: ${err.message}`);
   }
-  if (process.env.NEBULA_API_KEY) settings.apiKey = process.env.NEBULA_API_KEY;
-  if (process.env.NEBULA_COLLECTION_ID) settings.collectionId = process.env.NEBULA_COLLECTION_ID;
-  if (process.env.NEBULA_DEBUG === 'true') settings.debug = true;
+  if (process.env.CC_NEBULA_API_KEY) settings.apiKey = process.env.CC_NEBULA_API_KEY;
+  if (process.env.CC_NEBULA_COLLECTION_ID) settings.collectionId = process.env.CC_NEBULA_COLLECTION_ID;
+  if (process.env.CC_NEBULA_DEBUG === 'true') settings.debug = true;
   return settings;
 }
 
 function getApiKey(settings) {
   if (settings.apiKey) return settings.apiKey;
-  throw new Error('apiKey is required in ~/.nebula-claude/settings.json or NEBULA_API_KEY env var');
+  throw new Error('apiKey is required in ~/.nebula-claude/settings.json or CC_NEBULA_API_KEY env var');
 }
 
 function debugLog(settings, message, data) {
