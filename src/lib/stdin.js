@@ -21,19 +21,4 @@ function writeOutput(data) {
   console.log(JSON.stringify(data));
 }
 
-function outputSuccess(additionalContext = null) {
-  if (additionalContext) {
-    writeOutput({
-      hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext },
-    });
-  } else {
-    writeOutput({ continue: true, suppressOutput: true });
-  }
-}
-
-function outputError(message) {
-  console.error(`Nebula: ${message}`);
-  writeOutput({ continue: true, suppressOutput: true });
-}
-
-module.exports = { readStdin, writeOutput, outputSuccess, outputError };
+module.exports = { readStdin, writeOutput };

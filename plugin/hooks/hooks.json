@@ -1,35 +1,12 @@
 {
   "description": "Nebula: Persistent semantic memory for Claude Code",
   "hooks": {
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/context-hook.cjs",
-            "timeout": 30
-          }
-        ]
-      }
-    ],
     "UserPromptSubmit": [
       {
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/prompt-hook.cjs",
-            "timeout": 25
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "Edit|Write|Bash|Task",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/observation-hook.cjs",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/capture-hook.cjs UserPromptSubmit",
             "timeout": 25
           }
         ]
@@ -40,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/summary-hook.cjs",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/capture-hook.cjs Stop",
             "timeout": 30
           }
         ]

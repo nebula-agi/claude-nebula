@@ -1,10 +1,10 @@
 ---
-name: super-search
+name: nebula-search
 description: Search your semantic memory powered by Nebula. Use when user asks about past work, previous sessions, how something was implemented, what they worked on before, or wants to recall information from earlier sessions.
 allowed-tools: Bash(node:*)
 ---
 
-# Super Search
+# Nebula Search
 
 Search Nebula for past coding sessions, decisions, and saved information using semantic similarity.
 

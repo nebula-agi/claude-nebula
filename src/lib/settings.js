@@ -3,25 +3,14 @@ const path = require('node:path');
 const os = require('node:os');
 const { loadCredentials } = require('./auth');
 
-const SETTINGS_DIR = path.join(os.homedir(), '.nebula-claude');
-const SETTINGS_FILE = path.join(SETTINGS_DIR, 'settings.json');
-
-const DEFAULT_SETTINGS = {
-  skipTools: ['Read', 'Glob', 'Grep', 'TodoWrite', 'AskUserQuestion'],
-  captureTools: ['Edit', 'Write', 'Bash', 'Task'],
-  maxProfileItems: 5,
-  debug: false,
-  injectProfile: true,
-};
-
-function ensureSettingsDir() {
-  if (!fs.existsSync(SETTINGS_DIR)) {
-    fs.mkdirSync(SETTINGS_DIR, { recursive: true });
-  }
-}
+const SETTINGS_FILE = path.join(
+  os.homedir(),
+  '.nebula-claude',
+  'settings.json',
+);
 
 function loadSettings() {
-  const settings = { ...DEFAULT_SETTINGS };
+  const settings = { debug: false };
   try {
     if (fs.existsSync(SETTINGS_FILE)) {
       const fileContent = fs.readFileSync(SETTINGS_FILE, 'utf-8');
@@ -31,19 +20,8 @@ function loadSettings() {
     console.error(`Settings: Failed to load ${SETTINGS_FILE}: ${err.message}`);
   }
   if (process.env.NEBULA_API_KEY) settings.apiKey = process.env.NEBULA_API_KEY;
-  if (process.env.NEBULA_SKIP_TOOLS)
-    settings.skipTools = process.env.NEBULA_SKIP_TOOLS.split(',').map((s) =>
-      s.trim(),
-    );
   if (process.env.NEBULA_DEBUG === 'true') settings.debug = true;
   return settings;
-}
-
-function saveSettings(settings) {
-  ensureSettingsDir();
-  const toSave = { ...settings };
-  delete toSave.apiKey;
-  fs.writeFileSync(SETTINGS_FILE, JSON.stringify(toSave, null, 2));
 }
 
 function getApiKey(settings) {
@@ -54,14 +32,6 @@ function getApiKey(settings) {
   if (credentials?.apiKey) return credentials.apiKey;
 
   throw new Error('NO_API_KEY');
-}
-
-function shouldCaptureTool(toolName, settings) {
-  if (settings.skipTools.includes(toolName)) return false;
-  if (settings.captureTools && settings.captureTools.length > 0) {
-    return settings.captureTools.includes(toolName);
-  }
-  return true;
 }
 
 function debugLog(settings, message, data) {
@@ -76,12 +46,7 @@ function debugLog(settings, message, data) {
 }
 
 module.exports = {
-  SETTINGS_DIR,
-  SETTINGS_FILE,
-  DEFAULT_SETTINGS,
   loadSettings,
-  saveSettings,
   getApiKey,
-  shouldCaptureTool,
   debugLog,
 };
