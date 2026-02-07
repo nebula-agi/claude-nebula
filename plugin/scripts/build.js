@@ -7,7 +7,7 @@ const PLUGIN = path.join(__dirname, '..');
 const SRC = path.join(PLUGIN, 'src');
 const OUT = path.join(PLUGIN, 'scripts');
 
-const hooks = ['capture-hook', 'search-memory', 'add-memory'];
+const hooks = ['capture-hook', 'search-memory', 'add-memory', 'search-hook'];
 
 async function build() {
   console.log('Building hooks...\n');

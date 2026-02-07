@@ -8,6 +8,11 @@
             "type": "command",
             "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/capture-hook.cjs UserPromptSubmit",
             "timeout": 25
+          },
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/search-hook.cjs",
+            "timeout": 3
           }
         ]
       }
