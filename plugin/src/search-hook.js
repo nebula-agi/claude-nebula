@@ -1,52 +1,11 @@
 const { getProjectClient } = require('./lib/nebula');
 const { loadSettings, debugLog } = require('./lib/settings');
 const { readStdin, writeOutput } = require('./lib/stdin');
+const { loadState, saveState } = require('./lib/state');
 const crypto = require('node:crypto');
-const fs = require('node:fs');
-const path = require('node:path');
-const os = require('node:os');
 
 const MIN_SCORE = 0.3;
 const CHAR_BUDGET = 2000;
-const STATE_DIR = path.join(os.homedir(), '.nebula-claude', 'state');
-
-const LOG_FILE = path.join(os.homedir(), '.nebula-claude', 'search-hook.log');
-
-function fileLog(settings, msg) {
-  if (!settings.debug) return;
-  try {
-    const line = `[${new Date().toISOString()}] ${msg}\n`;
-    fs.appendFileSync(LOG_FILE, line);
-  } catch {
-    // ignore
-  }
-}
-
-function getStateFile(sessionId) {
-  return path.join(STATE_DIR, `${sessionId}-search.json`);
-}
-
-function loadLastHash(sessionId) {
-  try {
-    const file = getStateFile(sessionId);
-    if (fs.existsSync(file)) {
-      const data = JSON.parse(fs.readFileSync(file, 'utf-8'));
-      return data.hash || '';
-    }
-  } catch {
-    // ignore
-  }
-  return '';
-}
-
-function saveHash(sessionId, hash) {
-  try {
-    fs.mkdirSync(STATE_DIR, { recursive: true });
-    fs.writeFileSync(getStateFile(sessionId), JSON.stringify({ hash }));
-  } catch {
-    // ignore
-  }
-}
 
 function formatResults(utterances) {
   let output = 'Relevant memories from past sessions:';
@@ -73,12 +32,12 @@ async function main() {
 
   try {
     const input = await readStdin();
-    const prompt = input.prompt || '';
+    const prompt = (input.prompt || '').trim();
 
-    fileLog(settings, `search-hook invoked, prompt length=${prompt.length}`);
+    debugLog(settings, 'search-hook invoked', { promptLength: prompt.length });
 
-    if (!prompt.trim() || prompt.trim().length < 3) {
-      fileLog(settings, 'skipped: prompt too short');
+    if (prompt.length < 3) {
+      debugLog(settings, 'search-hook skipped: prompt too short');
       process.exit(0);
     }
 
@@ -91,10 +50,7 @@ async function main() {
       (u) => (u.activation_score || 0) >= MIN_SCORE,
     );
 
-    fileLog(
-      settings,
-      `search returned ${utterances.length} results above threshold`,
-    );
+    debugLog(settings, 'search-hook results', { count: utterances.length });
 
     if (utterances.length === 0) {
       process.exit(0);
@@ -105,16 +61,16 @@ async function main() {
     // Deduplicate: skip if identical to last injection for this session
     const hash = crypto.createHash('md5').update(formatted).digest('hex');
     const sessionId = input.session_id || 'default';
-    const lastHash = loadLastHash(sessionId);
+    const state = loadState(sessionId, '-search');
 
-    if (hash === lastHash) {
-      fileLog(settings, 'skipped: deduplicated (same as last injection)');
+    if (hash === state.hash) {
+      debugLog(settings, 'search-hook skipped: deduplicated');
       process.exit(0);
     }
 
-    saveHash(sessionId, hash);
+    saveState(sessionId, { hash }, '-search');
 
-    fileLog(settings, `injecting ${formatted.length} chars of context`);
+    debugLog(settings, 'search-hook injecting', { chars: formatted.length });
     writeOutput({
       hookSpecificOutput: {
         hookEventName: 'UserPromptSubmit',
@@ -123,7 +79,6 @@ async function main() {
     });
   } catch (err) {
     debugLog(settings, 'search-hook error', { error: err.message });
-    fileLog(settings, `error: ${err.message}`);
     process.exit(0);
   }
 }

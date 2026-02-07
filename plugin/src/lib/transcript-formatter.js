@@ -1,28 +1,5 @@
 const fs = require('node:fs');
-const path = require('node:path');
-const os = require('node:os');
-
-const STATE_DIR = path.join(os.homedir(), '.nebula-claude', 'state');
-
-function loadState(sessionId) {
-  try {
-    const file = path.join(STATE_DIR, `${sessionId}.json`);
-    if (fs.existsSync(file)) {
-      return JSON.parse(fs.readFileSync(file, 'utf-8'));
-    }
-  } catch {}
-  return {};
-}
-
-function saveState(sessionId, state) {
-  if (!fs.existsSync(STATE_DIR)) {
-    fs.mkdirSync(STATE_DIR, { recursive: true });
-  }
-  fs.writeFileSync(
-    path.join(STATE_DIR, `${sessionId}.json`),
-    JSON.stringify(state),
-  );
-}
+const { loadState, saveState } = require('./state');
 
 function parseTranscript(transcriptPath) {
   if (!fs.existsSync(transcriptPath)) {

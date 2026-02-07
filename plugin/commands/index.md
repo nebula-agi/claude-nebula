@@ -1,64 +1,19 @@
 ---
 description: Index codebase into Nebula for persistent context
-allowed-tools: ["Read", "Glob", "Grep", "Bash", "Task"]
+allowed-tools: ["Bash"]
 ---
 
-# Codebase Indexing
+Index the current codebase into Nebula by uploading source files for Tree-sitter processing.
 
-Explore this codebase deeply and compile findings into Nebula.
-
-## Phase 1: Project Overview
-
-Read and note:
-- `package.json` / `Cargo.toml` / `pyproject.toml` / `go.mod`
-- `README.md`
-- Config files (tsconfig, eslint, etc.)
-
-Gather: project name, purpose, tech stack, how to run/build/test
-
-## Phase 2: Architecture
-
-Explore and note:
-- Use Glob to understand folder structure
-- Find entry points (index.ts, main.py, App.tsx)
-- Identify API routes, database models
-
-Gather: architecture, key modules, data flow
-
-## Phase 3: Conventions
-
-Analyze and note:
-- Naming conventions
-- File organization
-- Import patterns
-- Git history: `git log --oneline -20`
-
-Gather: coding conventions, patterns to follow
-
-## Phase 4: Key Files
-
-Read and note:
-- Auth logic
-- Database connections
-- API clients
-- Shared utilities
-
-Gather: where important logic lives
-
-## Final Step: Save to Nebula
-
-After exploring all phases, compile everything into one comprehensive summary and save:
+Run this command:
 
 ```bash
-node "${CLAUDE_PLUGIN_ROOT}/scripts/add-memory.cjs" "YOUR COMPILED FINDINGS HERE"
+node "${CLAUDE_PLUGIN_ROOT}/scripts/index-code.cjs"
 ```
 
-Include: tech stack, architecture, conventions, key files, important patterns.
+This will:
+1. Discover all git-tracked files
+2. Skip lockfiles, minified/generated files, and files > 100KB
+3. Upload files in batches to Nebula for AST/symbol extraction
 
-## Instructions
-
-- Make ~20-50 tool calls to explore thoroughly
-- Skip node_modules, build outputs, generated files
-- Compile all findings at the end into one save
-
-Start now.
+After indexing, code symbols and structure will be searchable via `/nebula-search`.
