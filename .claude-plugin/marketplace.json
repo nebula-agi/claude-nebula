@@ -9,7 +9,7 @@
       "name": "claude-nebula",
       "source": "./plugin",
       "description": "Persistent semantic memory across Claude Code sessions powered by Nebula AI",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "author": {
         "name": "Nebula"
       }
